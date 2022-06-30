@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- bootsrtrap css  -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+
+    <!-- boootstrap js  -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- font awsome css  -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css"
+      rel="stylesheet"
+    />
+   
+    <title>Work Timing</title>
+
+    <style>
+      .time_item {
+        position: relative;
+      }
+
+      .paid{
+        opacity: .4;
+      }
+
+      .actionBtn{
+        position: absolute;
+        z-index: 10;
+        top: 100%;
+        cursor: pointer;
+      }
+
+      .none{
+        display: none !important;
+      }
+
+      .paidBtn{
+        right: 30px;
+        width: fit-content;
+      }
+
+      .deleteBtn {
+        right: 95px;
+        width: fit-content;
+      }
+
+      header .container{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .totalWorkingTime{
+        display: flex;
+        gap: 10px;
+      }
+
+      .menu{
+        position: absolute;
+        right: 0;
+        bottom: -20px;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 1px solid #ccc;
+        cursor: pointer;
+      }
+
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container mt-3">
+        <!-- Button trigger modal -->
+        <button
+          type="button"
+          class="btn btn-primary "
+          data-bs-toggle="modal"
+          data-bs-target="#exampleModal"
+        >
+        <i class="fa fa-plus" aria-hidden="true"></i>
+    </button>
+    
+        <div class="totalWorkingTime">
+        <div class="totalPaidTime border-end px-1">
+            <div class="title">Paid Mins</div>
+            <div class="body">0</div>
+        </div>
+        <div class="totalUnPaidTime border-end px-1">
+            <div class="title">Unpaid Mins</div>
+            <div class="body">0</div>
+        </div>
+        <div class="totalPaidUSD border-end px-1">
+            <div class="title">Paid USD</div>
+            <div class="body">0</div>
+        </div>
+        <div class="totalUnPaidUSD">
+            <div class="title">Unpaid USD</div>
+            <div class="body">0</div>
+        </div>
+    </div>
+      </div>
+
+    </header>
+
+    <div class="container">
+      <!-- Modal -->
+      <div
+        class="modal fade"
+        id="exampleModal"
+        tabindex="-1"
+        aria-labelledby="exampleModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"
+                  >Start Time</span
+                >
+                <input
+                  type="datetime-local"
+                  required
+                  class="form-control startTime"
+                  aria-label="Username"
+                  aria-describedby="basic-addon1"
+                />
+              </div>
+              <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1">End Time</span>
+                <input
+                  type="datetime-local"
+                  required
+                  class="form-control endTime"
+                  aria-label="Username"
+                  aria-describedby="basic-addon1"
+                />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary cancleBtn"
+                data-bs-dismiss="modal"
+              >
+                Close
+              </button>
+              <button type="button" class="btn btn-primary saveBtn">
+                Save changes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="times mt-5 mb-5"></div>
+    </div>
+
+    <script>
+       const rootURL = 'http://localhost:4000';
+
+        async function getDataFromDatabase(url) {
+        //============================================
+        // featching treeData to visulize it
+        const result = await fetch(url);
+        let treeData = await result.json();
+        return treeData;
+        }
+
+        async function httpRequest(url, type, data) {
+            if (!url || !type || !data) {
+                return console.error("url,type, and data are required in same sequence");
+            }
+
+            // Default options are marked with *
+            const response = await fetch(url, {
+                method: type, // *GET, POST, PUT, DELETE, etc.
+                headers: {
+                "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data), // body data type must match "Content-Type" header
+            });
+
+            const res = await response.json();
+            console.log(res); // print response
+            return res; // parses JSON response into native JavaScript objects
+        }
+
+      let model = document.querySelector("#exampleModal");
+      let startTime = document.querySelector("#exampleModal .modal-body .startTime");
+      let endTime = document.querySelector("#exampleModal .modal-body .endTime");
+      let saveBtn = document.querySelector("#exampleModal .modal-footer .saveBtn");
+      let cancleBtn = document.querySelector("#exampleModal .modal-footer .cancleBtn");
+      let timesContainer = document.querySelector(".times");
+      let totalPaidMinutesContainer = document.querySelector(".totalPaidTime .body");
+      let totalUnPaidMinutesContainer = document.querySelector(".totalUnPaidTime .body");
+      let totalPaidUSDContainer = document.querySelector(".totalPaidUSD .body");
+      let totalUnPaidUSDContainer = document.querySelector(".totalUnPaidUSD .body");
+
+      saveBtn.addEventListener("click", async () => {
+        let startTimeInMs = new Date(startTime.value).getTime();
+        let endTimeInMs = new Date(endTime.value).getTime();
+
+        try {
+            const res = await httpRequest(`${rootURL}/api/v1/time`,"POST",{"startTime":startTimeInMs , "endTime":endTimeInMs});
+        } catch (error) {
+            console.log(error);
+        }
+        
+
+        showTimes();
+        cancleBtn.click();
+      });
+
+      showTimes();
+
+      async function showTimes() {
+        let res = await getDataFromDatabase(`${rootURL}/api/v1/time`);
+        let times = res.times;
+
+        timesContainer.innerHTML = "";
+
+        let html = "";
+
+        if (!times) {
+          return;
+        }
+
+        let paid = times.filter(item=> item.isPaid);
+        let UnPaid = times.filter(item=> !item.isPaid);
+
+        times = [...UnPaid,...paid];
+
+        times.forEach((time) => {
+          let el = ` <div class="row border mt-4 time_item"  >
+                            <div class="col-5 p-0 ${time.isPaid? "paid":''}">
+                                <div class="title border-bottom px-2 bg-light"> Start Time </div>
+                                <div class="body px-2 startTime"> ${new Date(
+                                  time.startTime
+                                ).toLocaleString()} </div>
+                            </div>
+                            <div class="col-5 p-0 ${time.isPaid? "paid":''}">
+                                <div class="title border-bottom px-2 bg-light"> End Time </div>
+                                <div class="body px-2 endTime"> ${new Date(
+                                  time.endTime
+                                ).toLocaleString()} </div>
+                            </div>
+                            <div class="col-2 p-0 ${time.isPaid? "paid":''}">
+                                <div class="title border-bottom px-2 bg-light"> Total Time </div>
+                                <div class="body px-2 totalTime"> ${
+                                  (time.endTime - time.startTime) /
+                                  1000 /
+                                  60
+                                } Mins</div>
+                            </div>
+                            <div class="col-1 p-0 actionBtn deleteBtn none">
+                                <button type="button"  class="btn btn-danger ${time.isPaid? "none":""} " data-id='${time._id}'>Delete</button>
+                            </div>
+                            <div class="col-1 p-0 actionBtn paidBtn none">
+                                <button type="button" class="btn btn-success unpaid" data-id='${time._id}'>${time.isPaid? "Unpaid":"Paid"}</button>
+                            </div>
+                            <div class="col-1 p-0 menu">
+                                <i class="fa fa-caret-up" aria-hidden="true"></i>
+                            </div>
+
+                        </div>`;
+
+          html += el;
+        });
+
+        timesContainer.innerHTML = html;
+
+        let totalPaidTimeInMs = 0;
+        let totalUnPaidTimeInMs = 0;
+        times.forEach(time=>{
+            let diff = time.endTime - time.startTime;
+            if (time.paid) {
+                totalPaidTimeInMs += diff;
+            }
+            else{
+                totalUnPaidTimeInMs += diff;
+            }
+        })
+
+        totalPaidMinutesContainer.innerText = (totalPaidTimeInMs/1000)/60;
+        totalUnPaidMinutesContainer.innerText = (totalUnPaidTimeInMs/1000)/60;
+        totalPaidUSDContainer.innerText = (((totalPaidTimeInMs/1000)/60)*0.16666666666).toFixed(2);
+        totalUnPaidUSDContainer.innerText = (((totalUnPaidTimeInMs/1000)/60)*0.16666666666).toFixed(2);
+    
+        
+    
+        let paidBtns = document.querySelectorAll(".paidBtn button");
+        paidBtns.forEach((paidBtn) => {
+        paidBtn.addEventListener("click", async (e) => {
+            let id = e.target.getAttribute("data-id");
+            let isPaid = e.target.innerHTML==="Paid"? true:false;
+    
+            await  httpRequest(`${rootURL}/api/v1/time/${id}`,"PUT",{isPaid});
+            showTimes();
+          });
+        });
+
+        let deleteBtns = document.querySelectorAll(".deleteBtn button");
+        deleteBtns.forEach((deleteBtn) => {
+        deleteBtn.addEventListener("click", async (e) => {
+          let id = e.target.getAttribute("data-id");
+          await httpRequest(`${rootURL}/api/v1/time/${id}`,"DELETE",{});
+          showTimes()
+        });
+        });
+
+        const menuIcons = document.querySelectorAll('.menu');
+        menuIcons.forEach((menuIcon) => {
+            menuIcon.addEventListener("click", async (e) => {
+
+                let icon = e.target;
+
+                if (e.target.classList.contains('menu')) {
+                    icon = e.target.querySelector('i');
+                }
+                
+                if (e.target.classList.contains('fa-caret-up')) {
+                    icon.classList.remove('fa-caret-up')
+                    icon.classList.add('fa-caret-down')
+                }
+                else{
+                    icon.classList.remove('fa-caret-down')
+                    icon.classList.add('fa-caret-up')
+                }
+
+                // console.log();
+                const actionBtns = icon.parentElement.parentElement.querySelectorAll('.actionBtn')
+                actionBtns.forEach(btn=>{
+                    btn.classList.toggle('none');
+                })
+
+        });
+        });
+    }
+
+      
+    </script>
+  </body>
+</html>
