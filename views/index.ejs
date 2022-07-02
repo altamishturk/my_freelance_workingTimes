@@ -28,7 +28,8 @@
     <title>Work Timing</title>
 
     <style>
-      .time_item {
+      .time_item,
+      .timingCard {
         position: relative;
       }
 
@@ -48,19 +49,41 @@
       }
 
       .paidBtn{
-        right: 30px;
+        top: 0;
         width: fit-content;
       }
 
       .deleteBtn {
-        right: 95px;
         width: fit-content;
+        top: 0;
+        left: 80px;
       }
 
       header .container{
         display: flex;
         justify-content: space-between;
         align-items: center;
+      }
+
+      .date{
+        padding: 5px 0px;
+      }
+
+      .startTime,
+      .endTime{
+        font-weight: 700;
+      }
+
+      .startTime{
+        padding-top: 5px;
+      }
+
+     
+
+      .totalTime{
+        padding: 5px 0;
+        font-weight: 400;
+        border-bottom: .5px solid;
       }
 
       .totalWorkingTime{
@@ -70,15 +93,26 @@
 
       .menu{
         position: absolute;
-        right: 0;
-        bottom: -20px;
-        width: 20px;
-        height: 20px;
+        display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    top: 0;
+    right: 12px;
+    width: 35px;
+    height: 35px;
+    font-size: 30px;
+      }
+
+      .timingCard img{
+        width: auto;
+        height: 400px;
+      }
+
+      .searchContainer{
         display: flex;
         justify-content: center;
-        align-items: center;
-        border: 1px solid #ccc;
-        cursor: pointer;
       }
 
     </style>
@@ -147,8 +181,9 @@
                   type="datetime-local"
                   required
                   class="form-control startTime"
-                  aria-label="Username"
+                  aria-label="startTime"
                   aria-describedby="basic-addon1"
+                  name="startTime"
                 />
               </div>
               <div class="input-group mb-3">
@@ -157,8 +192,32 @@
                   type="datetime-local"
                   required
                   class="form-control endTime"
-                  aria-label="Username"
+                  aria-label="endTime"
                   aria-describedby="basic-addon1"
+                  name="endTime"
+                />
+              </div>
+              <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1">Desc..</span>
+                <textarea
+                  type="text"
+                  required
+                  class="form-control description"
+                  aria-label="description"
+                  aria-describedby="basic-addon1"
+                  name="description"
+                /></textarea>
+              </div>
+              <div class="input-group mb-3">
+                <input
+                  type="file"
+                  required
+                  class="form-control file"
+                  aria-label="image"
+                  aria-describedby="basic-addon1"
+                  name="image"
+                  accept="image/*" 
+                  onchange="loadFile(event)"
                 />
               </div>
             </div>
@@ -178,57 +237,84 @@
         </div>
       </div>
 
-      <div class="times mt-5 mb-5"></div>
+      <form class="row my-5 searchContainer mx-auto">
+        <div class="col-auto">
+          <input type="datetime-local" class="form-control" id="startDate" >
+        </div>
+        <div class="col-auto">
+          <input type="datetime-local" class="form-control" id="endDate" >
+        </div>
+        <div class="col-auto">
+          <button type="button" class="btn btn-primary mb-3 searchBtn">Search</button>
+        </div>
+      </form>
+
+
+      <div class="row row-cols-1 row-cols-md-2 g-4 my-5 cardsContainer"></div>
+
     </div>
 
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script>
-    //    const rootURL = 'http://localhost:4000';
-       const rootURL = 'https://working-times.herokuapp.com';
-
-        async function getDataFromDatabase(url) {
-        //============================================
-        // featching treeData to visulize it
-        const result = await fetch(url);
-        let treeData = await result.json();
-        return treeData;
-        }
-
-        async function httpRequest(url, type, data) {
-            if (!url || !type || !data) {
-                return console.error("url,type, and data are required in same sequence");
-            }
-
-            // Default options are marked with *
-            const response = await fetch(url, {
-                method: type, // *GET, POST, PUT, DELETE, etc.
-                headers: {
-                "Content-Type": "application/json",
-                },
-                body: JSON.stringify(data), // body data type must match "Content-Type" header
-            });
-
-            const res = await response.json();
-            console.log(res); // print response
-            return res; // parses JSON response into native JavaScript objects
-        }
-
+       const rootURL = 'http://localhost:5000';
+   
       let model = document.querySelector("#exampleModal");
       let startTime = document.querySelector("#exampleModal .modal-body .startTime");
       let endTime = document.querySelector("#exampleModal .modal-body .endTime");
+      let description = document.querySelector("#exampleModal .modal-body .description");
+      let file = document.querySelector("#exampleModal .modal-body .file");
       let saveBtn = document.querySelector("#exampleModal .modal-footer .saveBtn");
       let cancleBtn = document.querySelector("#exampleModal .modal-footer .cancleBtn");
-      let timesContainer = document.querySelector(".times");
+      let timesContainer = document.querySelector(".cardsContainer");
       let totalPaidMinutesContainer = document.querySelector(".totalPaidTime .body");
       let totalUnPaidMinutesContainer = document.querySelector(".totalUnPaidTime .body");
       let totalPaidUSDContainer = document.querySelector(".totalPaidUSD .body");
       let totalUnPaidUSDContainer = document.querySelector(".totalUnPaidUSD .body");
 
+      function loadFile(event){
+        let reader = new FileReader();
+
+        reader.onload = ()=>{
+          if (reader.readyState === 2) {
+            file = reader.result;
+          }
+        }
+
+        reader.readAsDataURL(event.target.files[0]);
+      }
+
       saveBtn.addEventListener("click", async () => {
         let startTimeInMs = new Date(startTime.value).getTime();
         let endTimeInMs = new Date(endTime.value).getTime();
+        description = description.value;
+
+        // console.log(startTimeInMs,endTimeInMs,description);
+
+        if (!startTimeInMs || !endTimeInMs) {
+        alert('start and end time are required');
+        return
+        }
 
         try {
-            const res = await httpRequest(`${rootURL}/api/v1/time`,"POST",{"startTime":startTimeInMs , "endTime":endTimeInMs});
+
+          const myForm = new FormData();
+
+          myForm.set("startTime", startTimeInMs);
+          myForm.set("endTime", endTimeInMs);
+          myForm.set("description", description);
+          myForm.set("image", file);
+
+
+          let options = {
+                headers: {
+                  "Content-Type":"multipart/form-data"
+                }
+           };
+
+          const res =  await axios.post(`${rootURL}/api/v1/time`,myForm,options);
+          console.log(res);
+
+
         } catch (error) {
             console.log(error);
         }
@@ -240,9 +326,30 @@
 
       showTimes();
 
-      async function showTimes() {
-        let res = await getDataFromDatabase(`${rootURL}/api/v1/time`);
-        let times = res.times;
+      function addZeroIfNumberIsLessThen10(num){
+        if (num < 10) {
+          return `0${num}`
+        }
+        return num;
+      }
+
+      function formatAMPM(date) {
+        date = new Date(date);
+        let hours = date.getHours();
+        let minutes = date.getMinutes();
+        let ampm = hours >= 12 ? 'pm' : 'am';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // the hour '0' should be '12'
+        // minutes = minutes < 10 ? '0'+minutes : minutes;
+        let strTime = addZeroIfNumberIsLessThen10(hours) + ':' + addZeroIfNumberIsLessThen10(minutes) + ' ' + ampm;
+        return strTime;
+      }
+
+      async function showTimes(query) {
+
+        let res = await axios.get(`${rootURL}/api/v1/time${query || ''}`);
+        
+        let times = res.data.times;
 
         timesContainer.innerHTML = "";
 
@@ -257,39 +364,36 @@
 
         times = [...UnPaid,...paid];
 
-        times.forEach((time) => {
-          let el = ` <div class="row border mt-4 time_item"  >
-                            <div class="col-5 p-0 ${time.isPaid? "paid":''}">
-                                <div class="title border-bottom px-2 bg-light"> Start Time </div>
-                                <div class="body px-2 startTime"> ${new Date(
-                                  time.startTime
-                                ).toLocaleString()} </div>
-                            </div>
-                            <div class="col-5 p-0 ${time.isPaid? "paid":''}">
-                                <div class="title border-bottom px-2 bg-light"> End Time </div>
-                                <div class="body px-2 endTime"> ${new Date(
-                                  time.endTime
-                                ).toLocaleString()} </div>
-                            </div>
-                            <div class="col-2 p-0 ${time.isPaid? "paid":''}">
-                                <div class="title border-bottom px-2 bg-light"> Total Time </div>
-                                <div class="body px-2 totalTime"> ${
-                                  (time.endTime - time.startTime) /
-                                  1000 /
-                                  60
-                                } Mins</div>
-                            </div>
-                            <div class="col-1 p-0 actionBtn deleteBtn none">
-                                <button type="button"  class="btn btn-danger ${time.isPaid? "none":""} " data-id='${time._id}'>Delete</button>
-                            </div>
-                            <div class="col-1 p-0 actionBtn paidBtn none">
-                                <button type="button" class="btn btn-success unpaid" data-id='${time._id}'>${time.isPaid? "Unpaid":"Paid"}</button>
-                            </div>
-                            <div class="col-1 p-0 menu">
-                                <i class="fa fa-caret-up" aria-hidden="true"></i>
-                            </div>
+        let addImageImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Icons8_flat_add_image.svg/1024px-Icons8_flat_add_image.svg.png';
 
-                        </div>`;
+        times.forEach((time) => {
+
+          let date = new Date(time.startTime);
+          date = `${addZeroIfNumberIsLessThen10(date.getDate())}:${addZeroIfNumberIsLessThen10((date.getMonth()+1))}:${addZeroIfNumberIsLessThen10(date.getFullYear())}`;
+
+          let el = `  <div class="col timingCard">
+          <div class="card">
+            <img src="${time.image?.url? time.image.url:addImageImage}" class="card-img-top ${time.isPaid? "paid":""}" alt="img">
+            <div class="card-body ${time.isPaid? "paid":""}">
+              <h5 class="card-title">
+                <div class="date">Date: ${date} </div>
+                <div class="startTime">From: ${formatAMPM(time.startTime)}</div>
+                <div class="endTime">To: ${formatAMPM(time.endTime)}</div>
+                <div class="totalTime">Total Time: ${((time.endTime-time.startTime)/1000)/60} Mins</div> 
+                </h5>
+              <p class="card-text">${time.description || 'Empity'}</p>
+            </div>
+          </div>
+          <div class="col-1 p-0 actionBtn deleteBtn none">
+            <button type="button"  class="btn btn-danger ${time.isPaid? "none":""} " data-id='${time._id}'>Delete</button>
+        </div>
+        <div class="col-1 p-0 actionBtn paidBtn none">
+            <button type="button" class="btn btn-success unpaid" data-id='${time._id}'>${time.isPaid? "Unpaid":"Paid"}</button>
+        </div>
+        <div class="col-1 p-0 menu">
+            <i class="fa fa-caret-up" aria-hidden="true"></i>
+        </div>
+        </div>`;
 
           html += el;
         });
@@ -300,7 +404,7 @@
         let totalUnPaidTimeInMs = 0;
         times.forEach(time=>{
             let diff = time.endTime - time.startTime;
-            if (time.paid) {
+            if (time.isPaid) {
                 totalPaidTimeInMs += diff;
             }
             else{
@@ -320,8 +424,7 @@
         paidBtn.addEventListener("click", async (e) => {
             let id = e.target.getAttribute("data-id");
             let isPaid = e.target.innerHTML==="Paid"? true:false;
-    
-            await  httpRequest(`${rootURL}/api/v1/time/${id}`,"PUT",{isPaid});
+            await axios.put(`${rootURL}/api/v1/time/${id}`,{isPaid})
             showTimes();
           });
         });
@@ -330,7 +433,7 @@
         deleteBtns.forEach((deleteBtn) => {
         deleteBtn.addEventListener("click", async (e) => {
           let id = e.target.getAttribute("data-id");
-          await httpRequest(`${rootURL}/api/v1/time/${id}`,"DELETE",{});
+          await axios.delete(`${rootURL}/api/v1/time/${id}`)
           showTimes()
         });
         });
@@ -364,6 +467,22 @@
         });
     }
 
+
+    const searchBtn = document.querySelector('.searchBtn');
+    searchBtn.addEventListener('click',(e)=>{
+
+      let startDate = e.target.parentElement.parentElement.querySelector('#startDate').value;
+      let endDate = e.target.parentElement.parentElement.querySelector('#endDate').value;
+      let query = `?startDate=${new Date(startDate).getTime()}&endDate=${new Date(endDate).getTime()}`
+      
+      if (!startDate || !endDate) {
+        alert('You can not search without start date and end date');
+        return
+      }
+      
+        showTimes(query)
+      
+    })
       
     </script>
   </body>

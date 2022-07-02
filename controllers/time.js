@@ -1,4 +1,6 @@
 const Time = require('../models/time');
+const cloudinary = require('cloudinary').v2;
+
 
 exports.getUnpaidTimes = async (req,res,next)=>{
 
@@ -51,7 +53,15 @@ exports.getpPaidTimes = async (req,res,next)=>{
 exports.getTimes = async (req,res,next)=>{
 
     try {
-        const times = await Time.find();
+
+        let times;
+
+        if (req.query.startDate) {
+            times = await Time.find().where('startTime').gte(req.query.startDate).lte(req.query.endDate);
+        }
+        else{
+            times = await Time.find();
+        }
 
 
         res.json({
@@ -74,16 +84,20 @@ exports.getTimes = async (req,res,next)=>{
 
 exports.newTime  = async (req,res,next)=>{
     try {
-        const {startTime,endTime} = req.body;
+        const {startTime,endTime,description,image} = req.body;
 
-        if (!startTime || !endTime) {
+        if (!startTime || !endTime ) {
             res.josn({
                 success: false,
                 message: 'startTime and endTime are required'
             })
         }
 
-        const time = await Time.create({startTime,endTime});
+        
+        let data = await cloudinary.uploader.upload(image,{folder: 'freelancing_times_images'});
+
+        const time = await Time.create({startTime,endTime,description,image:{ publicId: data.public_id, url: data.url }});
+
 
         res.json({
             success: true,
@@ -106,7 +120,21 @@ exports.updateTime  = async (req,res,next)=>{
 
         let {isPaid} = req.body;
 
-        const time = await Time.findByIdAndUpdate(req.params.id,{isPaid})
+        console.log(req.body);
+
+        let time = await Time.findById(req.params.id);
+
+        if (!time) {
+            res.json({
+                success: false,
+                message: 'invalid id',
+                time
+            })
+        }
+
+        time.isPaid = isPaid;
+
+        await time.save();
 
         res.json({
             success: true,
@@ -127,6 +155,8 @@ exports.updateTime  = async (req,res,next)=>{
 exports.deleteTime  = async (req,res,next)=>{
     try {
         const time = await Time.findByIdAndDelete(req.params.id);
+
+        await cloudinary.uploader.destroy(time.image.publicId);
 
         res.json({
             success: true,
