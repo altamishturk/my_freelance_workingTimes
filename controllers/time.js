@@ -87,17 +87,21 @@ exports.newTime  = async (req,res,next)=>{
         const {startTime,endTime,description,image} = req.body;
 
         if (!startTime || !endTime ) {
-            res.josn({
-                success: false,
-                message: 'startTime and endTime are required'
-            })
+            throw new Error('start and end time are required'); 
         }
 
+
+        let time = undefined;
+
+        if (image[0] !== '[') {
+            let data = await cloudinary.uploader.upload(image,{folder: 'freelancing_times_images'});
+            time = await Time.create({startTime,endTime,description,image:{ publicId: data.public_id, url: data.url }});
+        }
+        else{
+            time = await Time.create({startTime,endTime,description})
+        }
         
-        let data = await cloudinary.uploader.upload(image,{folder: 'freelancing_times_images'});
-
-        const time = await Time.create({startTime,endTime,description,image:{ publicId: data.public_id, url: data.url }});
-
+        
 
         res.json({
             success: true,
@@ -108,7 +112,6 @@ exports.newTime  = async (req,res,next)=>{
     catch (error) {
         res.json({
             success: false,
-            message: "could not create time",
             error
         })
     }
@@ -120,7 +123,7 @@ exports.updateTime  = async (req,res,next)=>{
 
         let {isPaid} = req.body;
 
-        console.log(req.body);
+        // console.log(req.body);
 
         let time = await Time.findById(req.params.id);
 

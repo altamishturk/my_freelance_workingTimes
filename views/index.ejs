@@ -39,9 +39,9 @@
 
       .actionBtn{
         position: absolute;
-        z-index: 10;
         top: 100%;
         cursor: pointer;
+        z-index: 0;
       }
 
       .none{
@@ -63,6 +63,18 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        padding: 20px 0px;
+        z-index: 100;
+      }
+
+      header{
+        box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.1);
+-webkit-box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.1);
+-moz-box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.1);
+position: sticky;
+        top: 0;
+        z-index: 100;
+        background-color: white;
       }
 
       .date{
@@ -119,7 +131,7 @@
   </head>
   <body>
     <header>
-      <div class="container mt-3">
+      <div class="container">
         <!-- Button trigger modal -->
         <button
           type="button"
@@ -313,7 +325,7 @@
            };
 
           const res =  await axios.post(`${rootURL}/api/v1/time`,myForm,options);
-          console.log(res);
+          console.log(res.data);
 
 
         } catch (error) {
@@ -361,11 +373,13 @@
         }
 
         let paid = times.filter(item=> item.isPaid);
+        paid = paid.sort((a, b) => b.startTime - a.endTime);;
         let UnPaid = times.filter(item=> !item.isPaid);
+        UnPaid = UnPaid.sort((a, b) => b.startTime - a.endTime);
 
         times = [...UnPaid,...paid];
 
-        let addImageImage = 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Icons8_flat_add_image.svg/1024px-Icons8_flat_add_image.svg.png';
+        let addImageImage = '/static/images/no_image.png';
 
         times.forEach((time) => {
 

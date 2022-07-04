@@ -8,6 +8,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const fileUpload = require("express-fileupload");
 const bodyParser = require("body-parser");
+const path = require('path')
 
 
 // call function to connect to the db 
@@ -20,6 +21,7 @@ app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use('/static', express.static(path.join(__dirname, 'public')))
 app.use(fileUpload({
     useTempFiles: true,
     tempFileDir: '/tmp/'
