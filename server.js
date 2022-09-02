@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 require('dotenv').config();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 4000;
 const db_connection = require('./connection/db_connection');
 const cloudinary = require('cloudinary').v2;
 const cors = require('cors');
@@ -42,9 +42,14 @@ cloudinary.config({
 app.get('/',(req,res)=>{
     res.render('index');
 })
+app.get('/login',(req,res)=>{
+    res.render('login');
+})
 
 const timesRoute = require('./routes/time');
+const userRoute = require('./routes/user');
 app.use('/api/v1/time',timesRoute)
+app.use('/api/v1/user',userRoute)
 
 
 app.listen(port,()=>{

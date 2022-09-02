@@ -1,168 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- bootsrtrap css  -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
-      crossorigin="anonymous"
-    />
-
-    <!-- boootstrap js  -->
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-      crossorigin="anonymous"
-    ></script>
-
-    <!-- font awsome css  -->
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css"
-      rel="stylesheet"
-    />
-   
-    <title>Work Timing</title>
-
-    <style>
-      .time_item,
-      .timingCard {
-        position: relative;
-      }
-
-      .paid{
-        opacity: .4;
-      }
-
-      .actionBtn{
-        position: absolute;
-        top: 100%;
-        cursor: pointer;
-        z-index: 0;
-      }
-
-      .none{
-        display: none !important;
-      }
-
-      .paidBtn{
-        top: 0;
-        width: fit-content;
-      }
-
-      .deleteBtn {
-        width: fit-content;
-        top: 0;
-        left: 80px;
-      }
-
-      header .container{
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 20px 0px;
-        z-index: 100;
-      }
-
-      header{
-        box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.1);
--webkit-box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.1);
--moz-box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.1);
-position: sticky;
-        top: 0;
-        z-index: 100;
-        background-color: white;
-      }
-
-      .date{
-        padding: 5px 0px;
-      }
-
-      .startTime,
-      .endTime{
-        font-weight: 700;
-      }
-
-      .startTime{
-        padding-top: 5px;
-      }
-
-     
-
-      .totalTime{
-        padding: 5px 0;
-        font-weight: 400;
-        border-bottom: .5px solid;
-      }
-
-      .totalWorkingTime{
-        display: flex;
-        gap: 10px;
-      }
-
-      .menu{
-        position: absolute;
-        display: flex;
-    justify-content: center;
-    align-items: center;
-    border: 1px solid #ccc;
-    cursor: pointer;
-    top: 0;
-    right: 12px;
-    width: 35px;
-    height: 35px;
-    font-size: 30px;
-      }
-
-      .timingCard img{
-        width: auto;
-        height: 400px;
-      }
-
-      .searchContainer{
-        display: flex;
-        justify-content: center;
-      }
-
-    </style>
-  </head>
-  <body>
-    <header>
-      <div class="container">
-        <!-- Button trigger modal -->
-        <button
-          type="button"
-          class="btn btn-primary "
-          data-bs-toggle="modal"
-          data-bs-target="#exampleModal"
-        >
-        <i class="fa fa-plus" aria-hidden="true"></i>
-    </button>
-    
-        <div class="totalWorkingTime">
-        <div class="totalPaidTime border-end px-1">
-            <div class="title">Paid Mins</div>
-            <div class="body">0</div>
-        </div>
-        <div class="totalUnPaidTime border-end px-1">
-            <div class="title">Unpaid Mins</div>
-            <div class="body">0</div>
-        </div>
-        <div class="totalPaidUSD border-end px-1">
-            <div class="title">Paid USD</div>
-            <div class="body">0</div>
-        </div>
-        <div class="totalUnPaidUSD">
-            <div class="title">Unpaid USD</div>
-            <div class="body">0</div>
-        </div>
-    </div>
-      </div>
-
-    </header>
+<%- include('./partials/head.ejs') %>
 
     <div class="container">
       <!-- Modal -->
@@ -270,6 +106,7 @@ position: sticky;
     <script>
       //  const rootURL = 'http://localhost:5000';
        const rootURL = 'https://working-times.herokuapp.com';
+
    
       let model = document.querySelector("#exampleModal");
       let startTime = document.querySelector("#exampleModal .modal-body .startTime");
@@ -299,7 +136,7 @@ position: sticky;
       saveBtn.addEventListener("click", async () => {
         let startTimeInMs = new Date(startTime.value).getTime();
         let endTimeInMs = new Date(endTime.value).getTime();
-        description = description.value;
+        let descriptionVal = description.value;
 
         // console.log(startTimeInMs,endTimeInMs,description);
 
@@ -314,7 +151,7 @@ position: sticky;
 
           myForm.set("startTime", startTimeInMs);
           myForm.set("endTime", endTimeInMs);
-          myForm.set("description", description);
+          myForm.set("description", descriptionVal);
           myForm.set("image", file);
 
 
@@ -383,6 +220,7 @@ position: sticky;
 
         times.forEach((time) => {
 
+          let isHide = user?.role === 'admin'? '':'hide'
           let date = new Date(time.startTime);
           date = `${addZeroIfNumberIsLessThen10(date.getDate())}:${addZeroIfNumberIsLessThen10((date.getMonth()+1))}:${addZeroIfNumberIsLessThen10(date.getFullYear())}`;
 
@@ -405,7 +243,8 @@ position: sticky;
         <div class="col-1 p-0 actionBtn paidBtn none">
             <button type="button" class="btn btn-success unpaid" data-id='${time._id}'>${time.isPaid? "Unpaid":"Paid"}</button>
         </div>
-        <div class="col-1 p-0 menu">
+      
+        <div class="col-1 p-0 menu ${isHide}">
             <i class="fa fa-caret-up" aria-hidden="true"></i>
         </div>
         </div>`;
@@ -500,5 +339,6 @@ position: sticky;
     })
       
     </script>
-  </body>
-</html>
+  
+
+  <%- include('./partials/footer.ejs') %>

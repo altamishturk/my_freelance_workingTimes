@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- bootsrtrap css  -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+
+    <!-- boootstrap js  -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- font awsome css  -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css"
+      rel="stylesheet"
+    />
+   
+    <title>Work Timing</title>
+
+    <style>
+      .time_item,
+      .timingCard {
+        position: relative;
+      }
+
+      .paid{
+        opacity: .4;
+      }
+
+      .actionBtn{
+        position: absolute;
+        top: 100%;
+        cursor: pointer;
+        z-index: 0;
+      }
+
+      .none{
+        display: none !important;
+      }
+
+      .paidBtn{
+        top: 0;
+        width: fit-content;
+      }
+
+      .deleteBtn {
+        width: fit-content;
+        top: 0;
+        left: 80px;
+      }
+
+      header .container{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 0px;
+        z-index: 100;
+      }
+
+      header{
+        box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.1);
+-webkit-box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.1);
+-moz-box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.1);
+position: sticky;
+        top: 0;
+        z-index: 100;
+        background-color: white;
+      }
+
+      .date{
+        padding: 5px 0px;
+      }
+
+      .startTime,
+      .endTime{
+        font-weight: 700;
+      }
+
+      .startTime{
+        padding-top: 5px;
+      }
+
+     
+
+      .totalTime{
+        padding: 5px 0;
+        font-weight: 400;
+        border-bottom: .5px solid;
+      }
+
+      .totalWorkingTime{
+        display: flex;
+        gap: 10px;
+      }
+
+      .menu{
+        position: absolute;
+        display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    top: 0;
+    right: 12px;
+    width: 35px;
+    height: 35px;
+    font-size: 30px;
+      }
+
+      .timingCard img{
+        width: auto;
+        height: 400px;
+      }
+
+      .searchContainer{
+        display: flex;
+        justify-content: center;
+      }
+
+      .hide {
+        display: none;
+      }
+
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <!-- Button trigger modal -->
+        <button
+          type="button"
+          class="btn btn-primary hide"
+          data-bs-toggle="modal"
+          data-bs-target="#exampleModal"
+        >
+           <i class="fa fa-plus" aria-hidden="true"></i>
+        </button>
+        <a class="hide loginbtn" href="/login"><button class="btn btn-primary">Login</button></a>
+    
+        <div class="totalWorkingTime">
+          <div class="totalPaidTime border-end px-1">
+              <div class="title">Paid Mins</div>
+              <div class="body">0</div>
+          </div>
+          <div class="totalUnPaidTime border-end px-1">
+              <div class="title">Unpaid Mins</div>
+              <div class="body">0</div>
+          </div>
+          <div class="totalPaidUSD border-end px-1">
+              <div class="title">Paid USD</div>
+              <div class="body">0</div>
+          </div>
+          <div class="totalUnPaidUSD">
+              <div class="title">Unpaid USD</div>
+              <div class="body">0</div>
+          </div>
+          
+        </div>
+      </div>
+
+    </header>
+    <script>
+    const modelOpenBtn = document.querySelector('#exampleModal');
+    const loginBtn = document.querySelector('.loginbtn')
+    const host = window.location.host;
+    const protocol = window.location.protocol;
+    let user = undefined;
+    getLoggedInUser();
+
+      async function getLoggedInUser(){
+        
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${protocol}//${host}/api/v1/user/loggedinuser`, {
+                  method: 'GET',
+                  headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                  }
+                });
+
+         const resData = await res.json();
+
+        if(resData.success){
+          user = resData.user;
+          if (user.role === 'admin') {
+            modelOpenBtn.classList.remove('hide');
+          }
+        }
+        else{
+           loginBtn.classList.remove('hide');
+         }
+      }
+    </script>

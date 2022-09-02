@@ -1,0 +1,111 @@
+<%- include('./partials/head.ejs') %>
+
+
+<div class="container">
+    <div class="row">
+      <div class="col-lg-6 mx-auto my-5">
+        <h2 class="text-center">Please Login..</h2>
+        <form class="mt-5" id="loginForm">
+          <h6 class="error loginError text-center"></h6>
+          <div class="mb-3">
+            <label for="email" class="form-label"
+              >Email address</label
+            >
+            <input
+              type="email"
+              class="form-control"
+              id="email"
+              aria-describedby="emailHelp"
+              required
+            />
+            <small class="error emailError"></small>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label"
+              >Password</label
+            >
+            <input
+              type="password"
+              class="form-control"
+              id="password"
+            />
+            <small class="error passError"></small>
+          </div>
+          <!-- <div class="mb-3 form-check">
+            <input
+              type="checkbox"
+              class="form-check-input"
+              id="exampleCheck1"
+              required                />
+            <label class="form-check-label" for="exampleCheck1"
+              >Check me out</label
+            >
+          </div> -->
+          <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+ <script>
+  (async function(){
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${protocol}//${host}/api/v1/user/mydetails/me`, {
+                  method: 'GET',
+                  headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                  }
+                });
+  
+    const resData = await res.json();
+
+    if (resData.success) {
+      window.location.href = '/'
+    }
+
+  })();
+
+  const loginForm = document.querySelector('#loginForm');
+
+  loginForm.addEventListener('submit', async e => {
+    e.preventDefault();
+
+    const email = loginForm.querySelector('#email');
+    const password = loginForm.querySelector('#password');
+
+    const data = {
+      email: email.value,
+      password: password.value
+    }
+
+
+
+
+    const res = await fetch(`${protocol}//${host}/api/v1/user/login`, {
+                  method: 'POST',
+                  headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify(data)
+                });
+
+    const resData = await res.json();
+
+    console.log(resData);
+
+    if(resData.success){
+      localStorage.setItem('token',resData.token);
+      window.location.href = '/';
+    }
+    else{
+      alert(resData.message);
+    }
+  })
+
+ </script> 
+
+<%- include('./partials/footer.ejs') %>
