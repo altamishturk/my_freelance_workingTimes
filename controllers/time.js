@@ -1,58 +1,40 @@
 const Time = require('../models/time');
 const cloudinary = require('cloudinary').v2;
+const bigPromice = require('../middlewares/bigPromise');
+const ErrorHandler = require('../utils/ErrorHandler')
 
 
-exports.getUnpaidTimes = async (req,res,next)=>{
+exports.getUnpaidTimes = bigPromice(async (req,res,next)=>{
 
-    try {
+
         const times = await Time.find({isPaid: false});
 
 
-        res.json({
+        res.status(200).json({
             success: true,
             message: "successfully fatched all Unpaid times",
             times
         })
-        
-    } 
-    catch (error) {
-        res.json({
-            success: false,
-            message: "could not fatch times",
-            error
-        })
-    }
 
-}
+})
 
 
-exports.getpPaidTimes = async (req,res,next)=>{
+exports.getpPaidTimes = bigPromice(async (req,res,next)=>{
 
-    try {
+    
         const times = await Time.find({isPaid: true});
 
 
-        res.json({
+        res.status(200).json({
             success: true,
             message: "successfully fatched all paid times",
             times
         })
-        
-    } 
-    catch (error) {
-        res.json({
-            success: false,
-            message: "could not fatch times",
-            error
-        })
-    }
 
-}
+})
 
 
-exports.getTimes = async (req,res,next)=>{
-
-    try {
+exports.getTimes = bigPromice(async (req,res,next)=>{
 
         let times;
 
@@ -64,26 +46,17 @@ exports.getTimes = async (req,res,next)=>{
         }
 
 
-        res.json({
+        res.status(200).json({
             success: true,
             message: "successfully fatched all times",
             times
-        })
-        
-    } 
-    catch (error) {
-        res.json({
-            success: false,
-            message: "could not fatch times",
-            error
-        })
-    }
+        })     
 
-}
+})
 
 
-exports.newTime  = async (req,res,next)=>{
-    try {
+exports.newTime  = bigPromice(async (req,res,next)=>{
+    
         const {startTime,endTime,description,image} = req.body;
 
         if (!startTime || !endTime ) {
@@ -103,24 +76,16 @@ exports.newTime  = async (req,res,next)=>{
         
         
 
-        res.json({
+        res.status(200).json({
             success: true,
             message: 'new time added successfully',
             time
         })
-    } 
-    catch (error) {
-        res.json({
-            success: false,
-            error
-        })
-    }
-}
+})
 
 
-exports.updateTime  = async (req,res,next)=>{
-    try {
-
+exports.updateTime  =bigPromice( async (req,res,next)=>{
+    
         let {isPaid} = req.body;
 
         // console.log(req.body);
@@ -128,7 +93,7 @@ exports.updateTime  = async (req,res,next)=>{
         let time = await Time.findById(req.params.id);
 
         if (!time) {
-            res.json({
+            res.status(400).json({
                 success: false,
                 message: 'invalid id',
                 time
@@ -139,39 +104,28 @@ exports.updateTime  = async (req,res,next)=>{
 
         await time.save();
 
-        res.json({
+        res.status(200).json({
             success: true,
             message: 'time updated successfully',
             time
         })
-    } 
-    catch (error) {
-        res.json({
-            success: false,
-            message: "could not update time",
-            error
-        })
-    }
-}
+})
 
 
-exports.deleteTime  = async (req,res,next)=>{
-    try {
+exports.deleteTime  = bigPromice(async (req,res,next)=>{
+ 
         const time = await Time.findByIdAndDelete(req.params.id);
+
+        if(!time){
+            return next(new ErrorHandler(400,""))
+        }
 
         await cloudinary.uploader.destroy(time.image.publicId);
 
-        res.json({
+        res.status(200).json({
             success: true,
             message: 'time deleted successfully',
             time
         })
-    } 
-    catch (error) {
-        res.json({
-            success: false,
-            message: "could not delete time",
-            error
-        })
-    }
-}
+    
+})

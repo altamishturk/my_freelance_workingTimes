@@ -36,8 +36,6 @@ cloudinary.config({
 
 
 
-
-
 // render ejs page 
 app.get('/',(req,res)=>{
     res.render('index');
@@ -50,6 +48,11 @@ const timesRoute = require('./routes/time');
 const userRoute = require('./routes/user');
 app.use('/api/v1/time',timesRoute)
 app.use('/api/v1/user',userRoute)
+
+
+// error handler middleware
+const errorHandler = require('./middlewares/error'); 
+app.use(errorHandler);
 
 
 app.listen(port,()=>{

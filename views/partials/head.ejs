@@ -139,7 +139,7 @@ position: sticky;
         <!-- Button trigger modal -->
         <button
           type="button"
-          class="btn btn-primary hide"
+          class="btn btn-primary hide time-add-model"
           data-bs-toggle="modal"
           data-bs-target="#exampleModal"
         >
@@ -170,16 +170,22 @@ position: sticky;
 
     </header>
     <script>
-    const modelOpenBtn = document.querySelector('#exampleModal');
+    const modelOpenBtn = document.querySelector('.time-add-model');
     const loginBtn = document.querySelector('.loginbtn')
     const host = window.location.host;
     const protocol = window.location.protocol;
     let user = undefined;
-    getLoggedInUser();
+    (async function (){
+      let token = localStorage.getItem('token');
+      if (token) {
+        await getLoggedInUser(token);
+      }
+    })()
 
-      async function getLoggedInUser(){
+
+
+      async function getLoggedInUser(token){
         
-        const token = localStorage.getItem('token');
         const res = await fetch(`${protocol}//${host}/api/v1/user/loggedinuser`, {
                   method: 'GET',
                   headers: {
@@ -189,7 +195,9 @@ position: sticky;
                   }
                 });
 
-         const resData = await res.json();
+        const resData = await res.json();
+
+        console.log(resData);
 
         if(resData.success){
           user = resData.user;
@@ -200,5 +208,7 @@ position: sticky;
         else{
            loginBtn.classList.remove('hide');
          }
+
+         console.log(resData);
       }
     </script>
