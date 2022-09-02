@@ -180,6 +180,9 @@ position: sticky;
       if (token) {
         await getLoggedInUser(token);
       }
+      if (!user) {
+        loginBtn.classList.remove('hide');
+      }
     })()
 
 
@@ -205,10 +208,5 @@ position: sticky;
             modelOpenBtn.classList.remove('hide');
           }
         }
-        else{
-           loginBtn.classList.remove('hide');
-         }
-
-         console.log(resData);
       }
     </script>
