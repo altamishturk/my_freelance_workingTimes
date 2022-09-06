@@ -49,24 +49,24 @@
 
 
  <script>
-  (async function(){
-    const token = localStorage.getItem('token');
-    const res = await fetch(`${protocol}//${host}/api/v1/user/mydetails/me`, {
-                  method: 'GET',
-                  headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                  }
-                });
+  // (async function(){
+  //   const token = localStorage.getItem('token');
+  //   const res = await fetch(`${protocol}//${host}/api/v1/user/mydetails/me`, {
+  //                 method: 'GET',
+  //                 headers: {
+  //                   'Accept': 'application/json',
+  //                   'Content-Type': 'application/json',
+  //                   'Authorization': `Bearer ${token}`
+  //                 }
+  //               });
   
-    const resData = await res.json();
+  //   const resData = await res.json();
 
-    if (resData.success) {
-      window.location.href = '/'
-    }
+  //   if (resData.success) {
+  //     window.location.href = '/'
+  //   }
 
-  })();
+  // })();
 
   const loginForm = document.querySelector('#loginForm');
 

@@ -167,11 +167,11 @@
         }
         
 
-        showTimes();
+        fetchTimeData();
         cancleBtn.click();
       });
 
-      showTimes();
+      fetchTimeData();
 
       function addZeroIfNumberIsLessThen10(num){
         if (num < 10) {
@@ -192,10 +192,10 @@
         return strTime;
       }
 
-      async function showTimes(query) {
+      async function fetchTimeData(query) {
 
         
-        const res = await fetch(`${protocol}//${host}/api/v1/time`, {
+        const res = await fetch(`${protocol}//${host}/api/v1/time/${query || ''}`, {
                   method: 'GET',
                   headers: {
                     'Accept': 'application/json',
@@ -206,99 +206,174 @@
     const resData = await res.json();
 
 
-        let times = resData.times;
+    if (resData.success) {
+      let times = resData.times;
+      displayTimes(times);
+      displayHeaderData(times);
+      marktimeAsPaid();
+      deleteTimes();
+      showHideCrudBtns();
+    }
+    else{
+      alert(resData.message)
+    }
+}
 
-        timesContainer.innerHTML = "";
 
-        let html = "";
+    const searchBtn = document.querySelector('.searchBtn');
+    searchBtn.addEventListener('click',(e)=>{
 
-        if (!times) {
-          return;
-        }
-
-        let paid = times.filter(item=> item.isPaid);
-        paid = paid.sort((a, b) => b.startTime - a.endTime);;
-        let UnPaid = times.filter(item=> !item.isPaid);
-        UnPaid = UnPaid.sort((a, b) => b.startTime - a.endTime);
-
-        times = [...UnPaid,...paid];
-
-        let addImageImage = '/static/images/no_image.png';
-
-        times.forEach((time) => {
-
-          let isHide = user?.role === 'admin'? '':'hide'
-          let date = new Date(time.startTime);
-          date = `${addZeroIfNumberIsLessThen10(date.getDate())}:${addZeroIfNumberIsLessThen10((date.getMonth()+1))}:${addZeroIfNumberIsLessThen10(date.getFullYear())}`;
-
-          let el = `  <div class="col timingCard">
-          <div class="card">
-            <img src="${time.image?.url? time.image.url:addImageImage}" class="card-img-top ${time.isPaid? "paid":""}" alt="img">
-            <div class="card-body ${time.isPaid? "paid":""}">
-              <h5 class="card-title">
-                <div class="date">Date: ${date} </div>
-                <div class="startTime">From: ${formatAMPM(time.startTime)}</div>
-                <div class="endTime">To: ${formatAMPM(time.endTime)}</div>
-                <div class="totalTime">Total Time: ${((time.endTime-time.startTime)/1000)/60} Mins</div> 
-                </h5>
-              <p class="card-text">${time.description || 'Empity'}</p>
-            </div>
-          </div>
-          <div class="col-1 p-0 actionBtn deleteBtn none">
-            <button type="button"  class="btn btn-danger ${time.isPaid? "none":""} " data-id='${time._id}'>Delete</button>
-        </div>
-        <div class="col-1 p-0 actionBtn paidBtn none">
-            <button type="button" class="btn btn-success unpaid" data-id='${time._id}'>${time.isPaid? "Unpaid":"Paid"}</button>
-        </div>
+      let startDate = e.target.parentElement.parentElement.querySelector('#startDate').value;
+      let endDate = e.target.parentElement.parentElement.querySelector('#endDate').value;
+      let query = `?startDate=${new Date(startDate).getTime()}&endDate=${new Date(endDate).getTime()}`
       
-        <div class="col-1 p-0 menu ${isHide}">
-            <i class="fa fa-caret-up" aria-hidden="true"></i>
-        </div>
-        </div>`;
+      if (!startDate || !endDate) {
+        alert('You can not search without start date and end date');
+        return
+      }
+      
+      fetchTimeData(query)
+      
+    })
+      
 
-          html += el;
-        });
+    function displayTimes(times){
+      timesContainer.innerHTML = "";
 
-        timesContainer.innerHTML = html;
+let html = "";
 
-        let totalPaidTimeInMs = 0;
-        let totalUnPaidTimeInMs = 0;
-        times.forEach(time=>{
-            let diff = time.endTime - time.startTime;
-            if (time.isPaid) {
-                totalPaidTimeInMs += diff;
-            }
-            else{
-                totalUnPaidTimeInMs += diff;
-            }
-        })
+if (!times) {
+  return;
+}
 
-        totalPaidMinutesContainer.innerText = (totalPaidTimeInMs/1000)/60;
-        totalUnPaidMinutesContainer.innerText = (totalUnPaidTimeInMs/1000)/60;
-        totalPaidUSDContainer.innerText = (((totalPaidTimeInMs/1000)/60)*0.16666666666).toFixed(2);
-        totalUnPaidUSDContainer.innerText = (((totalUnPaidTimeInMs/1000)/60)*0.16666666666).toFixed(2);
-    
-        
-    
-        let paidBtns = document.querySelectorAll(".paidBtn button");
-        paidBtns.forEach((paidBtn) => {
-        paidBtn.addEventListener("click", async (e) => {
+let paid = times.filter(item=> item.isPaid);
+paid = paid.sort((a, b) => b.startTime - a.endTime);;
+let UnPaid = times.filter(item=> !item.isPaid);
+UnPaid = UnPaid.sort((a, b) => b.startTime - a.endTime);
+
+times = [...UnPaid,...paid];
+
+let addImageImage = '/static/images/no_image.png';
+
+times.forEach((time) => {
+
+  let isHide = user?.role === 'admin'? '':'hide'
+  let date = new Date(time.startTime);
+  date = `${addZeroIfNumberIsLessThen10(date.getDate())}:${addZeroIfNumberIsLessThen10((date.getMonth()+1))}:${addZeroIfNumberIsLessThen10(date.getFullYear())}`;
+
+  let el = `  <div class="col timingCard">
+  <div class="card">
+    <img src="${time.image?.url? time.image.url:addImageImage}" class="card-img-top ${time.isPaid? "paid":""}" alt="img">
+    <div class="card-body ${time.isPaid? "paid":""}">
+      <h5 class="card-title">
+        <div class="date">Date: ${date} </div>
+        <div class="startTime">From: ${formatAMPM(time.startTime)}</div>
+        <div class="endTime">To: ${formatAMPM(time.endTime)}</div>
+        <div class="totalTime">Total Time: ${((time.endTime-time.startTime)/1000)/60} Mins</div> 
+        </h5>
+      <p class="card-text">${time.description || 'Empity'}</p>
+    </div>
+  </div>
+  <div class="col-1 p-0 actionBtn deleteBtn none">
+    <button type="button"  class="btn btn-danger ${time.isPaid? "none":""} " data-id='${time._id}'>Delete</button>
+</div>
+<div class="col-1 p-0 actionBtn paidBtn none">
+    <button type="button" class="btn btn-success unpaid" data-id='${time._id}'>${time.isPaid? "Unpaid":"Paid"}</button>
+</div>
+
+<div class="col-1 p-0 menu ${isHide}">
+    <i class="fa fa-caret-up" aria-hidden="true"></i>
+</div>
+</div>`;
+
+  html += el;
+});
+
+timesContainer.innerHTML = html;
+    }
+
+    function marktimeAsPaid(){
+      let paidBtns = document.querySelectorAll(".paidBtn button");
+      paidBtns.forEach((paidBtn) => {
+          paidBtn.addEventListener("click", async (e) => {
             let id = e.target.getAttribute("data-id");
             let isPaid = e.target.innerHTML==="Paid"? true:false;
-            await axios.put(`${rootURL}/api/v1/time/${id}`,{isPaid})
-            showTimes();
-          });
-        });
 
-        let deleteBtns = document.querySelectorAll(".deleteBtn button");
-        deleteBtns.forEach((deleteBtn) => {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${protocol}//${host}/api/v1/time/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                      'Accept': 'application/json',
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({isPaid})
+                  });
+
+            const resData = await res.json();
+            if (resData.success) {
+              alert('mark paid successfully!');
+              fetchTimeData();
+            }
+            else{
+              alert(resData.message);
+            }
+          });
+      });
+    }
+
+    function deleteTimes(){
+      let deleteBtns = document.querySelectorAll(".deleteBtn button");
+      deleteBtns.forEach((deleteBtn) => {
         deleteBtn.addEventListener("click", async (e) => {
           let id = e.target.getAttribute("data-id");
-          await axios.delete(`${rootURL}/api/v1/time/${id}`)
-          showTimes()
-        });
-        });
+          const token = localStorage.getItem('token');
+          const res = await fetch(`${protocol}//${host}/api/v1/time/${id}`, {
+                  method: 'DELETE',
+                  headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                  },
+                  body: JSON.stringify({data: ''})
+                });
 
+          const resData = await res.json();
+          console.log(resData);
+          if (resData.success) {
+            alert('deleted successfully!');
+            fetchTimeData();
+          }
+          else{
+            alert(resData.message);
+          }
+        });
+      });
+    }
+   
+    function displayHeaderData(times){
+      
+    let totalPaidTimeInMs = 0;
+    let totalUnPaidTimeInMs = 0;
+    times.forEach(time=>{
+        let diff = time.endTime - time.startTime;
+        if (time.isPaid) {
+            totalPaidTimeInMs += diff;
+        }
+        else{
+            totalUnPaidTimeInMs += diff;
+        }
+    })
+
+    totalPaidMinutesContainer.innerText = (totalPaidTimeInMs/1000)/60;
+    totalUnPaidMinutesContainer.innerText = (totalUnPaidTimeInMs/1000)/60;
+    totalPaidUSDContainer.innerText = (((totalPaidTimeInMs/1000)/60)*0.16666666666).toFixed(2);
+    totalUnPaidUSDContainer.innerText = (((totalUnPaidTimeInMs/1000)/60)*0.16666666666).toFixed(2);
+
+    }
+
+    function showHideCrudBtns(){
+      
         const menuIcons = document.querySelectorAll('.menu');
         menuIcons.forEach((menuIcon) => {
             menuIcon.addEventListener("click", async (e) => {
@@ -327,25 +402,7 @@
         });
         });
     }
-
-
-    const searchBtn = document.querySelector('.searchBtn');
-    searchBtn.addEventListener('click',(e)=>{
-
-      let startDate = e.target.parentElement.parentElement.querySelector('#startDate').value;
-      let endDate = e.target.parentElement.parentElement.querySelector('#endDate').value;
-      let query = `?startDate=${new Date(startDate).getTime()}&endDate=${new Date(endDate).getTime()}`
-      
-      if (!startDate || !endDate) {
-        alert('You can not search without start date and end date');
-        return
-      }
-      
-        showTimes(query)
-      
-    })
-      
-    </script>
+   </script>
   
 
   <%- include('./partials/footer.ejs') %>

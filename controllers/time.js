@@ -114,13 +114,15 @@ exports.updateTime  =bigPromice( async (req,res,next)=>{
 
 exports.deleteTime  = bigPromice(async (req,res,next)=>{
  
-        const time = await Time.findByIdAndDelete(req.params.id);
+        const time = await Time.findById(req.params.id);
 
         if(!time){
             return next(new ErrorHandler(400,""))
         }
 
         await cloudinary.uploader.destroy(time.image.publicId);
+
+        await time.remove();
 
         res.status(200).json({
             success: true,
