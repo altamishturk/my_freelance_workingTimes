@@ -54,13 +54,29 @@ exports.getTimes = bigPromice(async (req,res,next)=>{
 
 })
 
+exports.getTimeById = bigPromice(async (req,res,next)=>{
+
+        const time = await Time.findById(req.params.id);
+
+        if(!time){
+            return next(new ErrorHandler(400,"time not found"));
+        }
+
+
+        res.status(200).json({
+            success: true,
+            message: "successfully fatched time",
+            time
+        })     
+})
+
 
 exports.newTime  = bigPromice(async (req,res,next)=>{
     
         const {startTime,endTime,description,image} = req.body;
 
         if (!startTime || !endTime ) {
-            throw new Error('start and end time are required'); 
+            return next(new ErrorHandler(400,'start time and end times are required'))
         }
 
 
@@ -84,7 +100,7 @@ exports.newTime  = bigPromice(async (req,res,next)=>{
 })
 
 
-exports.updateTime  =bigPromice( async (req,res,next)=>{
+exports.updateTime  = bigPromice( async (req,res,next)=>{
     
         let {isPaid} = req.body;
 
@@ -112,6 +128,40 @@ exports.updateTime  =bigPromice( async (req,res,next)=>{
 })
 
 
+exports.updateDescriptionAndImageOfTime  = bigPromice( async (req,res,next)=>{
+   
+    let time = await Time.findById(req.params.id);
+
+    if (!time) {
+        return next(new ErrorHandler(400,'Invalid time Id'))
+    }
+
+    if (!req.body.description) {
+        return next(new ErrorHandler(400,'description is required'))
+    }
+
+   
+    if (req.body.image[0] !== '[') {
+        if(time.image){
+            await cloudinary.uploader.destroy(time.image.publicId);
+        }
+        let data = await cloudinary.uploader.upload(req.body.image,{folder: 'freelancing_times_images'});
+        time.image = { publicId: data.public_id, url: data.url };
+    }
+
+
+    time.description = req.body.description;
+
+    await time.save();
+
+    res.status(200).json({
+        success: true,
+        message: 'time description updated successfully',
+        time
+    })
+})
+
+
 exports.deleteTime  = bigPromice(async (req,res,next)=>{
  
         const time = await Time.findById(req.params.id);
@@ -120,7 +170,9 @@ exports.deleteTime  = bigPromice(async (req,res,next)=>{
             return next(new ErrorHandler(400,""))
         }
 
-        await cloudinary.uploader.destroy(time.image.publicId);
+        if(!time.image){
+            await cloudinary.uploader.destroy(time.image.publicId);
+        }
 
         await time.remove();
 

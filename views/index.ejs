@@ -1,14 +1,8 @@
 <%- include('./partials/head.ejs') %>
 
     <div class="container">
-      <!-- Modal -->
-      <div
-        class="modal fade"
-        id="exampleModal"
-        tabindex="-1"
-        aria-labelledby="exampleModalLabel"
-        aria-hidden="true"
-      >
+      <!-- Insert time Modal -->
+      <div class="modal fade" id="insertTime" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
@@ -84,6 +78,59 @@
           </div>
         </div>
       </div>
+      <!-- update time Modal -->
+      <div class="modal fade" id="updateTime" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1">Desc..</span>
+                <textarea
+                  type="text"
+                  required
+                  class="form-control description"
+                  aria-label="description"
+                  aria-describedby="basic-addon1"
+                  name="description"
+                /></textarea>
+              </div>
+              <div class="input-group mb-3">
+                <input
+                  type="file"
+                  required
+                  class="form-control file"
+                  aria-label="image"
+                  aria-describedby="basic-addon1"
+                  name="image"
+                  accept="image/*" 
+                  onchange="loadFile(event)"
+                />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary cancleBtn"
+                data-bs-dismiss="modal"
+              >
+                Close
+              </button>
+              <button type="button" class="btn btn-primary saveBtn">
+                Save changes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <form class="row my-5 searchContainer mx-auto">
         <div class="col-auto">
@@ -104,19 +151,35 @@
 
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script>
+      // time id 
+      let timeId = undefined;
    
-      let model = document.querySelector("#exampleModal");
-      let startTime = document.querySelector("#exampleModal .modal-body .startTime");
-      let endTime = document.querySelector("#exampleModal .modal-body .endTime");
-      let description = document.querySelector("#exampleModal .modal-body .description");
-      let file = document.querySelector("#exampleModal .modal-body .file");
-      let saveBtn = document.querySelector("#exampleModal .modal-footer .saveBtn");
-      let cancleBtn = document.querySelector("#exampleModal .modal-footer .cancleBtn");
+      //  insert time 
+      let insertTimeModel = document.querySelector("#insertTime");
+      let startTime = insertTimeModel.querySelector(".modal-body .startTime");
+      let endTime = insertTimeModel.querySelector(".modal-body .endTime");
+      let description = insertTimeModel.querySelector(".modal-body .description");
+      let file = insertTimeModel.querySelector(".modal-body .file");
+      let saveBtn = insertTimeModel.querySelector(".modal-footer .saveBtn");
+      let cancleBtn = insertTimeModel.querySelector(".modal-footer .cancleBtn");
+     
+      // update time 
+      let updateTimeModel = document.querySelector("#updateTime");
+      let updateStartTime = updateTimeModel.querySelector(".modal-body .startTime");
+      let updateEndTime = updateTimeModel.querySelector(".modal-body .endTime");
+      let updateDescription = updateTimeModel.querySelector(".modal-body .description");
+      let updateFile = updateTimeModel.querySelector(".modal-body .file");
+      let updateSaveBtn = updateTimeModel.querySelector(".modal-footer .saveBtn");
+      let updateCancleBtn = updateTimeModel.querySelector(".modal-footer .cancleBtn");
+
+      // times container 
       let timesContainer = document.querySelector(".cardsContainer");
       let totalPaidMinutesContainer = document.querySelector(".totalPaidTime .body");
       let totalUnPaidMinutesContainer = document.querySelector(".totalUnPaidTime .body");
       let totalPaidUSDContainer = document.querySelector(".totalPaidUSD .body");
       let totalUnPaidUSDContainer = document.querySelector(".totalUnPaidUSD .body");
+      fetchTimeData();
+
 
       function loadFile(event){
         let reader = new FileReader();
@@ -129,6 +192,7 @@
 
         reader.readAsDataURL(event.target.files[0]);
       }
+
 
       saveBtn.addEventListener("click", async () => {
         let startTimeInMs = new Date(startTime.value).getTime();
@@ -158,7 +222,7 @@
                 }
            };
 
-          const res =  await axios.post(`${rootURL}/api/v1/time`,myForm,options);
+          const res =  await axios.post(`${protocol}//${host}/api/v1/time`,myForm,options);
           console.log(res.data);
 
 
@@ -170,8 +234,37 @@
         fetchTimeData();
         cancleBtn.click();
       });
+      
+      updateSaveBtn.addEventListener("click", async () => {
+        let descriptionVal = updateDescription.value;
 
-      fetchTimeData();
+        try {
+
+          const myForm = new FormData();
+          myForm.set("description", descriptionVal);
+          myForm.set("image", file);
+
+
+          let options = {
+                headers: {
+                  "Content-Type":"multipart/form-data"
+                }
+           };
+
+          const res =  await axios.put(`${protocol}//${host}/api/v1/time/update/${timeId}`,myForm,options);
+          console.log(res.data);
+
+
+        } catch (error) {
+            console.log(error);
+        }
+        
+
+        fetchTimeData();
+        updateCancleBtn.click();
+      });
+
+     
 
       function addZeroIfNumberIsLessThen10(num){
         if (num < 10) {
@@ -209,10 +302,6 @@
     if (resData.success) {
       let times = resData.times;
       displayTimes(times);
-      displayHeaderData(times);
-      marktimeAsPaid();
-      deleteTimes();
-      showHideCrudBtns();
     }
     else{
       alert(resData.message)
@@ -240,56 +329,65 @@
     function displayTimes(times){
       timesContainer.innerHTML = "";
 
-let html = "";
+          let html = "";
 
-if (!times) {
-  return;
-}
+          if (!times) {
+            return;
+          }
 
-let paid = times.filter(item=> item.isPaid);
-paid = paid.sort((a, b) => b.startTime - a.endTime);;
-let UnPaid = times.filter(item=> !item.isPaid);
-UnPaid = UnPaid.sort((a, b) => b.startTime - a.endTime);
+          let paid = times.filter(item=> item.isPaid);
+          paid = paid.sort((a, b) => b.startTime - a.endTime);;
+          let UnPaid = times.filter(item=> !item.isPaid);
+          UnPaid = UnPaid.sort((a, b) => b.startTime - a.endTime);
 
-times = [...UnPaid,...paid];
+          times = [...UnPaid,...paid];
 
-let addImageImage = '/static/images/no_image.png';
+          let addImageImage = '/static/images/no_image.png';
 
-times.forEach((time) => {
+          times.forEach((time) => {
 
-  let isHide = user?.role === 'admin'? '':'hide'
-  let date = new Date(time.startTime);
-  date = `${addZeroIfNumberIsLessThen10(date.getDate())}:${addZeroIfNumberIsLessThen10((date.getMonth()+1))}:${addZeroIfNumberIsLessThen10(date.getFullYear())}`;
+            let isHide = user?.role === 'admin'? '':'hide'
+            let date = new Date(time.startTime);
+            date = `${addZeroIfNumberIsLessThen10(date.getDate())}:${addZeroIfNumberIsLessThen10((date.getMonth()+1))}:${addZeroIfNumberIsLessThen10(date.getFullYear())}`;
 
-  let el = `  <div class="col timingCard">
-  <div class="card">
-    <img src="${time.image?.url? time.image.url:addImageImage}" class="card-img-top ${time.isPaid? "paid":""}" alt="img">
-    <div class="card-body ${time.isPaid? "paid":""}">
-      <h5 class="card-title">
-        <div class="date">Date: ${date} </div>
-        <div class="startTime">From: ${formatAMPM(time.startTime)}</div>
-        <div class="endTime">To: ${formatAMPM(time.endTime)}</div>
-        <div class="totalTime">Total Time: ${((time.endTime-time.startTime)/1000)/60} Mins</div> 
-        </h5>
-      <p class="card-text">${time.description || 'Empity'}</p>
-    </div>
-  </div>
-  <div class="col-1 p-0 actionBtn deleteBtn none">
-    <button type="button"  class="btn btn-danger ${time.isPaid? "none":""} " data-id='${time._id}'>Delete</button>
-</div>
-<div class="col-1 p-0 actionBtn paidBtn none">
-    <button type="button" class="btn btn-success unpaid" data-id='${time._id}'>${time.isPaid? "Unpaid":"Paid"}</button>
-</div>
+            let el = `  <div class="col timingCard">
+            <div class="card">
+              <img src="${time.image?.url? time.image.url:addImageImage}" class="card-img-top ${time.isPaid? "paid":""}" alt="img">
+              <div class="card-body ${time.isPaid? "paid":""}">
+                <h5 class="card-title">
+                  <div class="date">Date: ${date} </div>
+                  <div class="startTime">From: ${formatAMPM(time.startTime)}</div>
+                  <div class="endTime">To: ${formatAMPM(time.endTime)}</div>
+                  <div class="totalTime">Total Time: ${((time.endTime-time.startTime)/1000)/60} Mins</div> 
+                  </h5>
+                <p class="card-text">${time.description || 'Empity'}</p>
+              </div>
+            </div>
+            <div class="col-1 p-0 actionBtn deleteBtn none">
+              <button type="button"  class="btn btn-danger ${time.isPaid? "none":""} " data-id='${time._id}'>Delete</button>
+          </div>
+          <div class="col-1 p-0 actionBtn paidBtn none">
+              <button type="button" class="btn btn-success unpaid" data-id='${time._id}'>${time.isPaid? "Unpaid":"Paid"}</button>
+          </div>
+          <div class="col-1 p-0 actionBtn updateBtn none">
+              <button type="button" data-bs-toggle="modal" data-bs-target="#updateTime" class="btn btn-success update" data-id='${time._id}'>Update</button>
+          </div>
 
-<div class="col-1 p-0 menu ${isHide}">
-    <i class="fa fa-caret-up" aria-hidden="true"></i>
-</div>
-</div>`;
+          <div class="col-1 p-0 menu ${isHide}">
+              <i class="fa fa-caret-up" aria-hidden="true"></i>
+          </div>
+          </div>`;
 
-  html += el;
-});
+            html += el;
+          });
 
-timesContainer.innerHTML = html;
+          timesContainer.innerHTML = html;
+
+          displayHeaderData(times);
+          marktimeAsPaid();
+          upadteTime();
+          deleteTimes();
+          showHideCrudBtns();
     }
 
     function marktimeAsPaid(){
@@ -322,31 +420,45 @@ timesContainer.innerHTML = html;
       });
     }
 
+    function upadteTime(){
+      let updateBtns = document.querySelectorAll(".updateBtn button");
+      updateBtns.forEach((updateBtn) => {
+        updateBtn.addEventListener("click", async (e) => {
+          timeId = e.target.getAttribute("data-id");
+          const time = await  getTimeById(timeId);
+          updateTimeModel.classList.remove('hide');
+          updateDescription.value = time.description;
+        })
+      })
+    }
+
     function deleteTimes(){
       let deleteBtns = document.querySelectorAll(".deleteBtn button");
       deleteBtns.forEach((deleteBtn) => {
         deleteBtn.addEventListener("click", async (e) => {
           let id = e.target.getAttribute("data-id");
-          const token = localStorage.getItem('token');
-          const res = await fetch(`${protocol}//${host}/api/v1/time/${id}`, {
-                  method: 'DELETE',
-                  headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                  },
-                  body: JSON.stringify({data: ''})
-                });
+          if(window.confirm('Are You Sure!')){
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${protocol}//${host}/api/v1/time/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                          'Accept': 'application/json',
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({data: ''})
+                      });
 
-          const resData = await res.json();
-          console.log(resData);
-          if (resData.success) {
-            alert('deleted successfully!');
-            fetchTimeData();
-          }
-          else{
-            alert(resData.message);
-          }
+                const resData = await res.json();
+                console.log(resData);
+                if (resData.success) {
+                  alert('deleted successfully!');
+                  fetchTimeData();
+                }
+                else{
+                  alert(resData.message);
+                }
+              }    
         });
       });
     }
@@ -402,6 +514,29 @@ timesContainer.innerHTML = html;
         });
         });
     }
+   
+    async function getTimeById(id){
+
+    const res = await fetch(`${protocol}//${host}/api/v1/time/timeid/${id}`, {
+                  method: 'GET',
+                  headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                  }
+                });
+
+    const resData = await res.json();
+
+
+    if (resData.success) {
+      return resData.time;
+    }
+    else{
+      alert(resData.message)
+    }
+   }
+
+
    </script>
   
 

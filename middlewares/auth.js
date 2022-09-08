@@ -1,7 +1,9 @@
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
+const ErrorHandler = require('../utils/ErrorHandler');
 
 
 module.exports.isLoggedIn = async (req,res,next)=>{
+    
     
     // check token first in cookies
     let token = req.cookies.token;
@@ -11,22 +13,23 @@ module.exports.isLoggedIn = async (req,res,next)=>{
         token = req.header("Authorization").replace("Bearer ", "");
     }
 
+    
    
     if (!token) {
-        return next(res.status(401).json({
-            success: true,
-            messgae: 'login to access this resource'
-        }))
+        return next(new ErrorHandler(401,'login to access this resource'));
     }
 
-    const jwtData = await jwt.verify(token,process.env.JWT_SECRET);
+    let jwtData =  '';
+   
+    try {
+        jwtData =  jwt.verify(token,process.env.JWT_SECRET);
+    } catch (error) {
+        return next(new ErrorHandler(401,'Invalid JSON Token'))
+    }
 
 
     if (!jwtData) {
-        return next(res.status(401).json({
-            success: true,
-            messgae: 'token has been expired'
-        }))
+        return next(new ErrorHandler(401,'token has been expired'))
     }
 
     req.user = jwtData.user;
