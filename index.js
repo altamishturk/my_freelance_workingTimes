@@ -11,6 +11,10 @@ const bodyParser = require("body-parser");
 const path = require('path')
 
 
+
+
+
+
 // call function to connect to the db 
 db_connection();
 
@@ -46,8 +50,10 @@ app.get('/login',(req,res)=>{
 
 const timesRoute = require('./routes/time');
 const userRoute = require('./routes/user');
-app.use('/api/v1/time',timesRoute)
-app.use('/api/v1/user',userRoute)
+const emailRoute = require('./routes/email');
+app.use('/api/v1/time',timesRoute);
+app.use('/api/v1/user',userRoute);
+app.use('/api/v1/email',emailRoute);
 
 
 // error handler middleware
