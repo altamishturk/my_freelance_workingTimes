@@ -235,6 +235,7 @@
         cancleBtn.click();
       });
       
+
       updateSaveBtn.addEventListener("click", async () => {
         let descriptionVal = updateDescription.value;
 
@@ -265,13 +266,13 @@
       });
 
      
-
       function addZeroIfNumberIsLessThen10(num){
         if (num < 10) {
           return `0${num}`
         }
         return num;
       }
+
 
       function formatAMPM(date) {
         date = new Date(date);

@@ -79,14 +79,13 @@ exports.newTime  = bigPromice(async (req,res,next)=>{
             return next(new ErrorHandler(400,'start time and end times are required'))
         }
 
-
         let time = undefined;
-
-        if (image[0] !== '[') {
+        
+        if (image !== "null") {
             let data = await cloudinary.uploader.upload(image,{folder: 'freelancing_times_images'});
             time = await Time.create({startTime,endTime,description,image:{ publicId: data.public_id, url: data.url }});
         }
-        else{
+        else {
             time = await Time.create({startTime,endTime,description})
         }
         

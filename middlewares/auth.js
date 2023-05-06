@@ -14,7 +14,6 @@ module.exports.isLoggedIn = async (req,res,next)=>{
     }
 
     
-   
     if (!token) {
         return next(new ErrorHandler(401,'login to access this resource'));
     }

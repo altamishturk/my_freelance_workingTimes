@@ -2,7 +2,6 @@ const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const bigPromise = require('../middlewares/bigPromise');
 const {sendToken} = require('../utils/sendToken');
-const jwt = require('jsonwebtoken')
 const { validationResult } = require('express-validator');
 
 
@@ -59,30 +58,32 @@ module.exports.signup = bigPromise(async (req,res,next)=>{
 
 module.exports.login = bigPromise(async (req,res,next)=>{
 
-
-const user = await User.findOne({email: req.body.email});
-
-
-if (!user) {
-    return next(res.status(404).json({
-        success: false,
-        message: 'Email or Password Does not match'
-    }))
-}
+    const user = await User.findOne({email: req.body.email});
 
 
-const isAuthenticate = await bcrypt.compare(req.body.password, user.passwordhash);
+    // const has = await bcrypt.hash("ALTa@8684864632",6);
+    // console.log(has);
+
+    if (!user) {
+        return next(res.status(404).json({
+            success: false,
+            message: 'Email or Password Does not match'
+        }))
+    }
 
 
-if (!isAuthenticate) {
-    return next(res.status(404).json({
-        success: false,
-        message: 'Email or Password Does not match'
-    }))
-}
+    const isAuthenticate =  bcrypt.compare(req.body.password, user.passwordhash);
 
-// send token to the user in response 
-sendToken(req,res,next,user)
+
+    if (!isAuthenticate) {
+        return next(res.status(404).json({
+            success: false,
+            message: 'Email or Password Does not match'
+        }))
+    }
+
+    // send token to the user in response 
+    sendToken(req,res,next,user)
 })
 
 
